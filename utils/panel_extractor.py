@@ -13,8 +13,7 @@ import os
 from typing import Dict, List, Any
 
 # internal imports
-from data_extractor import ExtractorSkeleton
-
+from .data_extractor import ExtractorSkeleton
 
 
 class PanelDataExtractor(ExtractorSkeleton):
