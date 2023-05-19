@@ -219,9 +219,9 @@ class PanelDataExtractor(ExtractorSkeleton):
 		xlim = [max(x_min), max(x_max)*1.1]
 		ylim = [0, max(y_max)*1.2]
 
-		self.label_plot(*labels, f'{plot_type.title()} Plot Pre and Post Arcing', xlim, ylim, ax=ax[0])
-		self.label_plot(*labels, f'{plot_type.title()} Plot Pre Arcing', xlim, ylim, ax=ax[1])
-		self.label_plot(*labels, f'{plot_type.title()} Plot Post Arcing', xlim, ylim, ax=ax[2])
+		self.label_plot(*labels, f'{plot_type} Plot Pre and Post Arcing', xlim, ylim, ax=ax[0])
+		self.label_plot(*labels, f'{plot_type} Plot Pre Arcing', xlim, ylim, ax=ax[1])
+		self.label_plot(*labels, f'{plot_type} Plot Post Arcing', xlim, ylim, ax=ax[2])
 
 		# space out subplots
 		fig.subplots_adjust(hspace=hspace, wspace=wspace)
