@@ -12,7 +12,6 @@ import matplotlib.cm as cm
 import os, re
 from typing import Dict, List, Any, Optional
 
-
 # internal imports
 from .data_extractor import ExtractorSkeleton
 
@@ -22,7 +21,7 @@ class PanelDataExtractor(ExtractorSkeleton):
 	for panel extractor class, data needs to be in csv or txt with comma
 	delimiters and the following column names:
 
-	columns = [current_pre, voltage_pre, current_post, voltage_post]
+	columns = [current, voltage]
 
 	'''
 
@@ -191,7 +190,7 @@ class PanelDataExtractor(ExtractorSkeleton):
 		plot_type: str = 'IV', hspace: float = 0.4, wspace: float = 0.4, alpha: float = 0.2, 
 		xlim: Optional[List[float]] = None) -> None:
 		'''
-		plots IV relationship
+		plots indicated relationship
 
 		'''
 
