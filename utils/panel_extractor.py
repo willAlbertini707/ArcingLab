@@ -9,8 +9,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import os
+import os, re
 from typing import Dict, List, Any
+
 
 # internal imports
 from .data_extractor import ExtractorSkeleton
@@ -40,7 +41,7 @@ class PanelDataExtractor(ExtractorSkeleton):
 	A = 0.0024 # m2
 
 	# column names
-	column_names = ['current_pre', 'voltage_pre', 'current_post', 'voltage_post']
+	column_names = ['current', 'voltage']
 
 
 	def __init__(self):
@@ -58,9 +59,23 @@ class PanelDataExtractor(ExtractorSkeleton):
 			# check if file is a csv before adding
 			if file[-3:] == 'csv' or file[:-3] == 'txt':
 
-				# grab the name of the test
-				name = file[:-4]
+				# use regex to find underscore index, extract name and test name
+				res = re.search(r'_', file)
+				if not res:
+					raise Exception(f"File {file} is not named correctly!")
+
+				index = res.start()
+				test_name = file[:index]
 				
+				# create flag for df naming
+				found = 'pre' in file
+
+				if found:
+					test_position = 'pre'
+				else:
+					test_position = 'post'
+
+
 				# creat file path
 				path = os.path.join(directory, file)
 
@@ -71,9 +86,14 @@ class PanelDataExtractor(ExtractorSkeleton):
 				if temp_df.columns.to_list().sort() != self.column_names.sort():
 					raise Exception(f'Column names must be {self.column_names}')
 
+				# check to see if pre or post frame has been added yet
+				if test_name not in self._frame_dict:
+					# create new dictionary for file
+					self._frame_dict[test_name] = {}
 
-				# add dataframe to dicitonary
-				self._frame_dict[name] = temp_df.copy()
+				# add test to dicitonary using 'pre' or 'post'
+				self._frame_dict[test_name][test_position] = temp_df.copy()
+					
 
 		# check to see if any files were added
 		if not self._frame_dict:
@@ -105,10 +125,12 @@ class PanelDataExtractor(ExtractorSkeleton):
 		# loop through dataframe dictionary and change current values
 		if self._frame_dict:
 
-			for key, val in self._frame_dict.items():
+			for test, subtest in self._frame_dict.items():
 
-				val.current_pre = self._current_adjust(T, val.current_pre, val.voltage_pre)
-				val.current_post = self._current_adjust(T, val.current_post, val.voltage_post)
+				for position, df in subtest.items():
+
+					df.current = self._current_adjust(T, df.current, df.voltage)
+
 		else:
 			raise Exception("Run fit_extract first with appropriate arguments")
 
@@ -124,9 +146,11 @@ class PanelDataExtractor(ExtractorSkeleton):
 
 		# add power column pre and post for analysis
 
-		for key, val in self._frame_dict.items():
-			val['power_pre'] = val.current_pre * val.voltage_pre
-			val['power_post'] = val.current_post * val.voltage_post
+		for test, subtest in self._frame_dict.items():
+
+			for position, df in subtest.items():
+
+				df['power'] = df.current * df.voltage
 
 
 		return self
@@ -169,21 +193,10 @@ class PanelDataExtractor(ExtractorSkeleton):
 		plots IV relationship
 
 		'''
+
 		# check for valid dataframe
 		if not self._frame_dict:
 			raise Exception("Run fit_extract first with appropriate arguments")
-
-
-		# create columns
-		x_pre, x_post = x + '_pre', x + '_post'
-		y_pre, y_post = y + '_pre', y + '_post'
-
-		# check for valid column names
-		for col in [x_pre, x_post, y_pre, y_post]:
-
-			for key, val in self._frame_dict.items():
-				if col not in val.columns:
-					raise Exception(f"{col} column not found in dataframe(s)")
 
 		x_min, x_max = [], []
 		y_min, y_max = [], []
@@ -194,25 +207,27 @@ class PanelDataExtractor(ExtractorSkeleton):
 		# use color generator for unique colors
 		color_gen = self.color_generator(len(self._frame_dict) + 1)
 
+		# loop through data and plot
+		for test, subtest in self._frame_dict.items():
 
-		for name, df in self._frame_dict.items():
+			for position, df in subtest.items():
 
-			# keep track of min and max values
-			x_min += [df[x_pre].min(), df[x_post].min()]
-			x_max += [df[x_pre].max(), df[x_post].max()]
-			y_min += [df[y_pre].min(), df[y_post].min()]
-			y_max += [df[y_pre].max(), df[y_post].max()]
+				# keep track of min and max values
+				x_min += [df[x].min(), df[x].min()]
+				x_max += [df[x].max(), df[x].max()]
+				y_min += [df[y].min(), df[y].min()]
+				y_max += [df[y].max(), df[y].max()]
 
-			line_color = next(color_gen)
-			# plot all values on main subplot
-			ax[0].plot(df[x_pre], df[y_pre], label=f'{name} pre', color = line_color, alpha = alpha)
-			ax[0].plot(df[x_post], df[y_post], linestyle = '--', label =f'{name} post', color = line_color, alpha = alpha)
-			
-			# plot all pre values on smaller plot
-			ax[1].plot(df[x_pre], df[y_pre], label=f'{name}', color=line_color, alpha=alpha)
+				line_color = next(color_gen)
+				# plot all values on main subplot
+				ax[0].plot(subtest['pre'][x], subtest['pre'][y], label=f'{test} pre', color = line_color, alpha = alpha)
+				ax[0].plot(subtest['post'][x], subtest['post'][y], linestyle = '--', label =f'{test} post', color = line_color, alpha = alpha)
+				
+				# plot all pre values on smaller plot
+				ax[1].plot(subtest['pre'][x], subtest['pre'][y], label=f'{test}', color=line_color, alpha=alpha)
 
-			# plot all post values on seperate smaller plot
-			ax[2].plot(df[x_post], df[y_post], label=f'{name}', color=line_color, alpha=alpha)
+				# plot all post values on seperate smaller plot
+				ax[2].plot(subtest['post'][x], subtest['post'][y], label=f'{test}', color=line_color, alpha=alpha)
 
 
 		# label plots
@@ -229,7 +244,7 @@ class PanelDataExtractor(ExtractorSkeleton):
 		plt.plot()
 
 		if savefig:
-			fig.savefig('IV_plot.png')
+			fig.savefig(f'{plot_type}_plot.png')
 
 
 	@property
