@@ -49,6 +49,7 @@ class PanelDataExtractor(ExtractorSkeleton):
 
 	def fit_extract(self, directory: str) -> Any:
 
+
 		# create file/directory dictionary
 		self._frame_dict = {}
 
@@ -82,7 +83,7 @@ class PanelDataExtractor(ExtractorSkeleton):
 				temp_df = pd.read_csv(path)
 
 				# check to see if columns are formatted correctly
-				if temp_df.columns.to_list().sort() != self.column_names.sort():
+				if sorted(temp_df.columns.to_list()) != sorted(self.column_names):
 					raise Exception(f'Column names must be {self.column_names}')
 
 				# check to see if pre or post frame has been added yet
@@ -276,6 +277,6 @@ class PanelDataExtractor(ExtractorSkeleton):
 
 
 	@property
-	def frame_dict(self) -> Dict[str, pd.DataFrame]:
+	def frame_dict(self) -> Dict[str, Dict[str, pd.DataFrame]]:
 		# frame_dict getter
 		return self._frame_dict.copy()
