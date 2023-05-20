@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import os, re
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 
 # internal imports
@@ -188,7 +188,8 @@ class PanelDataExtractor(ExtractorSkeleton):
 
  
 	def plot_results(self, savefig: bool = False, x: str ='voltage', y: str='current', labels: List[str] = ['Voltage (V)', 'Current (A)'],
-		plot_type: str = 'IV', hspace: float = 0.4, wspace: float = 0.4, alpha: float = 0.2) -> None:
+		plot_type: str = 'IV', hspace: float = 0.4, wspace: float = 0.4, alpha: float = 0.2, 
+		xlim: Optional[List[float]] = None) -> None:
 		'''
 		plots IV relationship
 
@@ -230,7 +231,8 @@ class PanelDataExtractor(ExtractorSkeleton):
 
 
 		# label plots
-		xlim = [max(x_min), max(x_max)*1.1]
+		if not xlim:
+			xlim = [max(x_min), max(x_max)*1.1]
 		ylim = [0, max(y_max)*1.2]
 
 		self.label_plot(*labels, f'{plot_type} Plot Pre and Post Arcing', xlim, ylim, ax=ax[0])
@@ -244,6 +246,34 @@ class PanelDataExtractor(ExtractorSkeleton):
 
 		if savefig:
 			fig.savefig(f'{plot_type}_plot.png')
+
+
+	def calculate_efficiency(self, solar_constant: float) -> pd.DataFrame:
+		'''
+		Calculates efficiency for all tests and returns a data frame 
+		containing each calculation
+
+		'''
+
+		# max power coming from sun
+		p_in = solar_constant * self.A
+
+		# create dataframe to return for displaying
+		efficiency_frame = pd.DataFrame(columns = ['Test', 'Pre Arcing', 'Post Arcing'])
+
+		for test, subtest in self._frame_dict.items():
+
+			try:
+				pre_efficiency = subtest['pre'].power.max() / p_in
+				post_efficiency = subtest['post'].power.max() / p_in
+
+			except Exception as e:
+				print(e)
+				raise Exception("add_power must be run before efficiency can be calculated")
+
+			efficiency_frame.loc[len(efficiency_frame.index)] = [test, pre_efficiency, post_efficiency]
+
+		return efficiency_frame
 
 
 	@property
