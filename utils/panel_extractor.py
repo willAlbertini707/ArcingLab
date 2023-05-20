@@ -210,24 +210,23 @@ class PanelDataExtractor(ExtractorSkeleton):
 		# loop through data and plot
 		for test, subtest in self._frame_dict.items():
 
-			for position, df in subtest.items():
 
-				# keep track of min and max values
-				x_min += [df[x].min(), df[x].min()]
-				x_max += [df[x].max(), df[x].max()]
-				y_min += [df[y].min(), df[y].min()]
-				y_max += [df[y].max(), df[y].max()]
+			# keep track of min and max values
+			x_min += [subtest['pre'][x].min(), subtest['post'][x].min()]
+			x_max += [subtest['pre'][x].max(), subtest['post'][x].max()]
+			y_min += [subtest['pre'][y].min(), subtest['post'][y].min()]
+			y_max += [subtest['pre'][y].max(), subtest['post'][y].max()]
 
-				line_color = next(color_gen)
-				# plot all values on main subplot
-				ax[0].plot(subtest['pre'][x], subtest['pre'][y], label=f'{test} pre', color = line_color, alpha = alpha)
-				ax[0].plot(subtest['post'][x], subtest['post'][y], linestyle = '--', label =f'{test} post', color = line_color, alpha = alpha)
-				
-				# plot all pre values on smaller plot
-				ax[1].plot(subtest['pre'][x], subtest['pre'][y], label=f'{test}', color=line_color, alpha=alpha)
+			line_color = next(color_gen)
+			# plot all values on main subplot
+			ax[0].plot(subtest['pre'][x], subtest['pre'][y], label=f'{test} pre', color = line_color, alpha = alpha)
+			ax[0].plot(subtest['post'][x], subtest['post'][y], linestyle = '--', label =f'{test} post', color = line_color, alpha = alpha)
+			
+			# plot all pre values on smaller plot
+			ax[1].plot(subtest['pre'][x], subtest['pre'][y], label=f'{test}', color=line_color, alpha=alpha)
 
-				# plot all post values on seperate smaller plot
-				ax[2].plot(subtest['post'][x], subtest['post'][y], label=f'{test}', color=line_color, alpha=alpha)
+			# plot all post values on seperate smaller plot
+			ax[2].plot(subtest['post'][x], subtest['post'][y], label=f'{test}', color=line_color, alpha=alpha)
 
 
 		# label plots
