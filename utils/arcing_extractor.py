@@ -90,7 +90,7 @@ class ArcingDataExtractor(ExtractorSkeleton):
 		label plots
 
 		'''
-		plt.ylim(ylim)
+		# plt.ylim(ylim)
 		plt.xlim(xlim)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
@@ -146,7 +146,7 @@ class ArcingDataExtractor(ExtractorSkeleton):
 			color = next(color_dict)
 
 			# plot the data
-			plt.plot(df[x], df[y], color = color, alpha = alpha, label = f"{test}")
+			plt.loglog(df[x], df[y], color = color, alpha = alpha, label = f"{test}")
 
 		if not xlim:
 			xlim = [max(x_min), max(x_max)*1.1]
